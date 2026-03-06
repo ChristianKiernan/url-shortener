@@ -67,7 +67,7 @@ setting the environment variables described in [Configuration](#configuration).
 ./mvnw spring-boot:run
 ```
 
-Flyway automatically runs database migrations on startup — no manual schema setup required.
+Flyway automatically runs database migrations on startup; no manual schema setup required.
 
 The API is available at `http://localhost:8080`.
 
