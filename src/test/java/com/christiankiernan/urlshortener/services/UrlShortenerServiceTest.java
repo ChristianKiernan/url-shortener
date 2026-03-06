@@ -64,6 +64,14 @@ class UrlShortenerServiceTest {
         verify(repository, times(1)).save(any());
     }
 
+    @Test
+    void createShortUrl_throwsWhenMaxRetriesExceeded() {
+        when(repository.existsByShortCode(any())).thenReturn(true);
+
+        assertThatThrownBy(() -> service.createShortUrl(TEST_URL))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
     // Tests for getByShortCode()
 
     @Test
