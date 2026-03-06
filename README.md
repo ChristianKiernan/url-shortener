@@ -58,8 +58,8 @@ cd url-shortener
 docker compose up -d
 ```
 
-This starts a PostgreSQL instance on port `5433`. Alternatively, point the app at your own PostgreSQL database by
-setting the environment variables described in [Configuration](#configuration).
+This starts a PostgreSQL instance on port `5433`. Alternatively, point the app at your own
+PostgreSQL database by setting the environment variables described in [Configuration](#configuration).
 
 ### 3. Run the application
 
@@ -67,7 +67,7 @@ setting the environment variables described in [Configuration](#configuration).
 ./mvnw spring-boot:run
 ```
 
-Flyway automatically runs database migrations on startup; no manual schema setup required.
+Flyway automatically runs database migrations on startup — no manual schema setup required.
 
 The API is available at `http://localhost:8080`.
 
