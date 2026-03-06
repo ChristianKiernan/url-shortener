@@ -6,16 +6,16 @@ import com.christiankiernan.urlshortener.dto.UpdateUrlRequest;
 import com.christiankiernan.urlshortener.services.UrlShortenerService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+/**
+ * REST controller for managing shortened URLs.
+ *
+ * <p>All endpoints are rooted at {@code /shorten}. Request bodies are validated
+ * on arrival; invalid payloads receive 400 responses. Missing short codes
+ * receive a 404 response. Both error shapes are handled by
+ * {@link com.christiankiernan.urlshortener.exceptions.GlobalExceptionHandler}.
+ */
 @RestController
 @RequestMapping("/shorten")
 public class UrlShortenerController {
@@ -26,28 +26,62 @@ public class UrlShortenerController {
         this.service = service;
     }
 
+    /**
+     * Creates a new shortened URL.
+     *
+     * @param request the request body containing the original URL
+     * @return the created shortened URL with its generated short code
+     */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ShortenedUrlResponse create(@Valid @RequestBody CreateUrlRequest request) {
         return ShortenedUrlResponse.from(service.createShortUrl(request.url()));
     }
 
+    /**
+     * Retrieves a shortened URL by its short code and increments its access count.
+     *
+     * @param code the short code to look up
+     * @return the matching shortened URL
+     * @throws com.christiankiernan.urlshortener.exceptions.NotFoundException if the code does not exist
+     */
     @GetMapping("/{code}")
     public ShortenedUrlResponse getByShortCode(@PathVariable String code) {
         return ShortenedUrlResponse.from(service.getByShortCode(code));
     }
 
+    /**
+     * Updates the original URL associated with a short code.
+     *
+     * @param code    the short code of the entry to update
+     * @param request the request body containing the new URL
+     * @return the updated shortened URL
+     * @throws com.christiankiernan.urlshortener.exceptions.NotFoundException if the code does not exist
+     */
     @PutMapping("/{code}")
     public ShortenedUrlResponse update(@PathVariable String code, @Valid @RequestBody UpdateUrlRequest request) {
         return ShortenedUrlResponse.from(service.updateShortUrl(code, request.url()));
     }
 
+    /**
+     * Deletes the shortened URL with the given short code.
+     *
+     * @param code the short code of the entry to delete
+     * @throws com.christiankiernan.urlshortener.exceptions.NotFoundException if the code does not exist
+     */
     @DeleteMapping("/{code}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable String code) {
         service.deleteShortUrl(code);
     }
 
+    /**
+     * Retrieves access statistics for a shortened URL without incrementing its access count.
+     *
+     * @param code the short code to look up
+     * @return the shortened URL including its current access count
+     * @throws com.christiankiernan.urlshortener.exceptions.NotFoundException if the code does not exist
+     */
     @GetMapping("/{code}/stats")
     public ShortenedUrlResponse getStats(@PathVariable String code) {
         return ShortenedUrlResponse.from(service.getStats(code));
