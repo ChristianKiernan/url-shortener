@@ -17,6 +17,7 @@ public class UrlShortenerService {
 
     private static final String ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     private static final int SHORT_CODE_LENGTH = 6;
+    private static final int MAX_RETRIES = 5;
     private final SecureRandom random = new SecureRandom();
     private final ShortenedUrlRepository shortenedUrlRepository;
 
@@ -34,7 +35,11 @@ public class UrlShortenerService {
     @Transactional
     public ShortenedUrl createShortUrl(String url) {
         String shortCode;
+        int attempts = 0;
         do {
+            if (attempts++ >= MAX_RETRIES) {
+                throw new IllegalStateException("Failed to generate unique short code after " + MAX_RETRIES + " attempts");
+            }
             shortCode = generateShortCode();
         } while (shortenedUrlRepository.existsByShortCode(shortCode));  // retry on collision
 
