@@ -1,10 +1,10 @@
 package com.christiankiernan.urlshortener.services;
 
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.stereotype.Service;
+import com.christiankiernan.urlshortener.exceptions.NotFoundException;
 import com.christiankiernan.urlshortener.models.ShortenedUrl;
 import com.christiankiernan.urlshortener.repo.ShortenedUrlRepository;
-import com.christiankiernan.urlshortener.exceptions.NotFoundException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 
@@ -63,7 +63,7 @@ public class UrlShortenerService {
      * Updates the original URL associated with the given short code.
      *
      * @param shortCode the short code of the entry to update
-     * @param newUrl the new URL to associate with the short code
+     * @param newUrl    the new URL to associate with the short code
      * @return the updated {@link ShortenedUrl} entity
      * @throws NotFoundException if no entry exists for the given short code
      */
