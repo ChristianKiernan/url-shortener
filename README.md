@@ -12,7 +12,7 @@ A RESTful API for creating and managing shortened URLs, built with Spring Boot a
 - [Running Tests](#running-tests)
 - [API Reference](#api-reference)
 - [Error Handling](#error-handling)
-- [License](#license)
+- [Limitations](#limitations)
 
 ---
 
@@ -295,6 +295,14 @@ Returned when the request body fails validation (e.g. missing or malformed URL).
 
 ---
 
-## License
+## Limitations
 
-This project is licensed under the MIT License.
+This project is intended as a learning project (specifically, as a solution to
+https://roadmap.sh/projects/url-shortening-service), and omits
+several concerns that a production API would require:
+
+- **Authentication**: all endpoints are publicly accessible
+- **Rate limiting**: the API does not throttle requests per client
+- **Pagination**: endpoints return single resources only, no list/search support
+- **HTTPS**: TLS termination is expected to be handled by a reverse proxy or hosting platform
+
