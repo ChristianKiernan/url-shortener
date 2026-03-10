@@ -72,7 +72,6 @@ class UrlShortenerServiceTest {
                 .isInstanceOf(IllegalStateException.class);
     }
 
-    // Tests for getByShortCode()
 
     @Test
     void getByShortCode_incrementsAccessCount() {
@@ -90,8 +89,6 @@ class UrlShortenerServiceTest {
         assertThatThrownBy(() -> service.getByShortCode(TEST_CODE))
                 .isInstanceOf(NotFoundException.class);
     }
-
-    // Tests for updateShortUrl()
 
     @Test
     void updateShortUrl_persistsNewUrl() {
@@ -111,8 +108,6 @@ class UrlShortenerServiceTest {
                 .isInstanceOf(NotFoundException.class);
     }
 
-    // Tests for deleteShortUrl()
-
     @Test
     void deleteShortUrl_deletesEntityFromRepository() {
         ShortenedUrl entity = buildShortenedUrl();
@@ -130,8 +125,6 @@ class UrlShortenerServiceTest {
         assertThatThrownBy(() -> service.deleteShortUrl(TEST_CODE))
                 .isInstanceOf(NotFoundException.class);
     }
-
-    // Tests for getStats()
 
     @Test
     void getStats_returnsEntityWithoutIncrementingAccessCount() {
