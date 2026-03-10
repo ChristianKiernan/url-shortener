@@ -9,7 +9,6 @@ A RESTful API for creating and managing shortened URLs, built with Spring Boot a
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
 - [Configuration](#configuration)
-- [Running Tests](#running-tests)
 - [API Reference](#api-reference)
 - [Error Handling](#error-handling)
 - [Limitations](#limitations)
@@ -19,6 +18,7 @@ A RESTful API for creating and managing shortened URLs, built with Spring Boot a
 ## Features
 
 - Create shortened URLs with auto-generated 6-character base-62 codes
+- Redirect to the original URL via short code (`302 Found`)
 - Retrieve the original URL by short code
 - Update or delete existing short URLs
 - Track access counts per short URL
@@ -96,26 +96,33 @@ SPRING_DATASOURCE_PASSWORD=mypassword \
 
 ---
 
-## Running Tests
-
-```bash
-./mvnw test
-```
-
-The test suite includes unit tests (service layer) and integration tests (controller layer). Integration tests use
-Testcontainers and require Docker to be running.
-
-To run a single test class:
-
-```bash
-./mvnw test -Dtest=UrlShortenerServiceTest
-```
-
----
-
 ## API Reference
 
 Base URL: `http://localhost:8080`
+
+---
+
+### Redirect to original URL
+
+Resolves a short code and redirects to the original URL, incrementing the access count.
+
+```
+GET /{code}
+```
+
+**Response** `302 Found`
+
+```
+Location: https://example.com/some/very/long/path
+```
+
+**Example**
+
+```bash
+curl -L http://localhost:8080/aB3xYz
+```
+
+> Use `-L` to have curl follow the redirect automatically.
 
 ---
 
