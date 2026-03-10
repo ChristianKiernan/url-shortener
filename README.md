@@ -100,6 +100,8 @@ SPRING_DATASOURCE_PASSWORD=mypassword \
 
 Base URL: `http://localhost:8080`
 
+The redirect endpoint lives at the root. The management API is versioned under `/api/v1`.
+
 ---
 
 ### Redirect to original URL
@@ -129,7 +131,7 @@ curl -L http://localhost:8080/aB3xYz
 ### Create a shortened URL
 
 ```
-POST /shorten
+POST /api/v1/shorten
 ```
 
 **Request body**
@@ -156,7 +158,7 @@ POST /shorten
 **Example**
 
 ```bash
-curl -X POST http://localhost:8080/shorten \
+curl -X POST http://localhost:8080/api/v1/shorten \
   -H "Content-Type: application/json" \
   -d '{"url": "https://example.com"}'
 ```
@@ -168,7 +170,7 @@ curl -X POST http://localhost:8080/shorten \
 Retrieves the entry for a short code and increments its access count.
 
 ```
-GET /shorten/{code}
+GET /api/v1/shorten/{code}
 ```
 
 **Response** `200 OK`
@@ -187,7 +189,7 @@ GET /shorten/{code}
 **Example**
 
 ```bash
-curl http://localhost:8080/shorten/aB3xYz
+curl http://localhost:8080/api/v1/shorten/aB3xYz
 ```
 
 ---
@@ -197,7 +199,7 @@ curl http://localhost:8080/shorten/aB3xYz
 Replaces the original URL associated with a short code.
 
 ```
-PUT /shorten/{code}
+PUT /api/v1/shorten/{code}
 ```
 
 **Request body**
@@ -224,7 +226,7 @@ PUT /shorten/{code}
 **Example**
 
 ```bash
-curl -X PUT http://localhost:8080/shorten/aB3xYz \
+curl -X PUT http://localhost:8080/api/v1/shorten/aB3xYz \
   -H "Content-Type: application/json" \
   -d '{"url": "https://example.com/updated/path"}'
 ```
@@ -234,7 +236,7 @@ curl -X PUT http://localhost:8080/shorten/aB3xYz \
 ### Delete a shortened URL
 
 ```
-DELETE /shorten/{code}
+DELETE /api/v1/shorten/{code}
 ```
 
 **Response** `204 No Content`
@@ -242,7 +244,7 @@ DELETE /shorten/{code}
 **Example**
 
 ```bash
-curl -X DELETE http://localhost:8080/shorten/aB3xYz
+curl -X DELETE http://localhost:8080/api/v1/shorten/aB3xYz
 ```
 
 ---
@@ -252,7 +254,7 @@ curl -X DELETE http://localhost:8080/shorten/aB3xYz
 Retrieves the entry for a short code without incrementing its access count.
 
 ```
-GET /shorten/{code}/stats
+GET /api/v1/shorten/{code}/stats
 ```
 
 **Response** `200 OK`
@@ -271,7 +273,7 @@ GET /shorten/{code}/stats
 **Example**
 
 ```bash
-curl http://localhost:8080/shorten/aB3xYz/stats
+curl http://localhost:8080/api/v1/shorten/aB3xYz/stats
 ```
 
 ---

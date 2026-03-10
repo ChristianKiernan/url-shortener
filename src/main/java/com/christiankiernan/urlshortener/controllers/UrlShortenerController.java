@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
  * {@link com.christiankiernan.urlshortener.exceptions.GlobalExceptionHandler}.
  */
 @RestController
-@RequestMapping("/shorten")
+@RequestMapping("/api/v1/shorten")
 public class UrlShortenerController {
 
     private final UrlShortenerService service;

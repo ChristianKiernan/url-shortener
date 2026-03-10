@@ -36,7 +36,7 @@ class UrlShortenerControllerTest {
     void create_returns201WithShortenedUrl() throws Exception {
         when(service.createShortUrl(TEST_URL)).thenReturn(buildShortenedUrl());
 
-        mockMvc.perform(post("/shorten")
+        mockMvc.perform(post("/api/v1/shorten")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"url": "https://example.com"}
@@ -48,7 +48,7 @@ class UrlShortenerControllerTest {
 
     @Test
     void create_returns400WhenUrlIsBlank() throws Exception {
-        mockMvc.perform(post("/shorten")
+        mockMvc.perform(post("/api/v1/shorten")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"url": ""}
@@ -58,7 +58,7 @@ class UrlShortenerControllerTest {
 
     @Test
     void create_returns400WhenUrlIsInvalid() throws Exception {
-        mockMvc.perform(post("/shorten")
+        mockMvc.perform(post("/api/v1/shorten")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"url": "not-a-url"}
@@ -72,7 +72,7 @@ class UrlShortenerControllerTest {
     void getByShortCode_returns200WithShortenedUrl() throws Exception {
         when(service.getByShortCode(TEST_CODE)).thenReturn(buildShortenedUrl());
 
-        mockMvc.perform(get("/shorten/{code}", TEST_CODE))
+        mockMvc.perform(get("/api/v1/shorten/{code}", TEST_CODE))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.url").value(TEST_URL))
                 .andExpect(jsonPath("$.shortCode").value(TEST_CODE));
@@ -82,7 +82,7 @@ class UrlShortenerControllerTest {
     void getByShortCode_returns404WhenCodeNotFound() throws Exception {
         when(service.getByShortCode(TEST_CODE)).thenThrow(new NotFoundException(TEST_CODE));
 
-        mockMvc.perform(get("/shorten/{code}", TEST_CODE))
+        mockMvc.perform(get("/api/v1/shorten/{code}", TEST_CODE))
                 .andExpect(status().isNotFound());
     }
 
@@ -94,7 +94,7 @@ class UrlShortenerControllerTest {
         updated.setUrl("https://updated.com");
         when(service.updateShortUrl(eq(TEST_CODE), any())).thenReturn(updated);
 
-        mockMvc.perform(put("/shorten/{code}", TEST_CODE)
+        mockMvc.perform(put("/api/v1/shorten/{code}", TEST_CODE)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"url": "https://updated.com"}
@@ -105,7 +105,7 @@ class UrlShortenerControllerTest {
 
     @Test
     void update_returns400WhenUrlIsInvalid() throws Exception {
-        mockMvc.perform(put("/shorten/{code}", TEST_CODE)
+        mockMvc.perform(put("/api/v1/shorten/{code}", TEST_CODE)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"url": "not-a-url"}
@@ -117,7 +117,7 @@ class UrlShortenerControllerTest {
     void update_returns404WhenCodeNotFound() throws Exception {
         when(service.updateShortUrl(eq(TEST_CODE), any())).thenThrow(new NotFoundException(TEST_CODE));
 
-        mockMvc.perform(put("/shorten/{code}", TEST_CODE)
+        mockMvc.perform(put("/api/v1/shorten/{code}", TEST_CODE)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"url": "https://updated.com"}
@@ -129,7 +129,7 @@ class UrlShortenerControllerTest {
 
     @Test
     void delete_returns204() throws Exception {
-        mockMvc.perform(delete("/shorten/{code}", TEST_CODE))
+        mockMvc.perform(delete("/api/v1/shorten/{code}", TEST_CODE))
                 .andExpect(status().isNoContent());
 
         verify(service).deleteShortUrl(TEST_CODE);
@@ -139,7 +139,7 @@ class UrlShortenerControllerTest {
     void delete_returns404WhenCodeNotFound() throws Exception {
         doThrow(new NotFoundException(TEST_CODE)).when(service).deleteShortUrl(TEST_CODE);
 
-        mockMvc.perform(delete("/shorten/{code}", TEST_CODE))
+        mockMvc.perform(delete("/api/v1/shorten/{code}", TEST_CODE))
                 .andExpect(status().isNotFound());
     }
 
@@ -149,7 +149,7 @@ class UrlShortenerControllerTest {
     void getStats_returns200WithAccessCount() throws Exception {
         when(service.getStats(TEST_CODE)).thenReturn(buildShortenedUrl());
 
-        mockMvc.perform(get("/shorten/{code}/stats", TEST_CODE))
+        mockMvc.perform(get("/api/v1/shorten/{code}/stats", TEST_CODE))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessCount").value(0));
     }
@@ -158,7 +158,7 @@ class UrlShortenerControllerTest {
     void getStats_returns404WhenCodeNotFound() throws Exception {
         when(service.getStats(TEST_CODE)).thenThrow(new NotFoundException(TEST_CODE));
 
-        mockMvc.perform(get("/shorten/{code}/stats", TEST_CODE))
+        mockMvc.perform(get("/api/v1/shorten/{code}/stats", TEST_CODE))
                 .andExpect(status().isNotFound());
     }
 
