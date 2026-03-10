@@ -26,28 +26,28 @@ public class UrlShortenerService {
     }
 
     /**
-     * Creates a new shortened URL for the given original URL.
-     * Generates a unique 6-character alphanumeric short code, retrying if a collision occurs.
+     * Creates a shortened URL by generating a unique short code for the given URL
+     * and saving it to the repository.
+     * <p>
+     * Retries a maximum number of times in case of short code collisions. If a unique
+     * short code cannot be generated within the configured retries, an {@link IllegalStateException}
+     * is thrown.
      *
-     * @param url the original URL to shorten
-     * @return the newly created {@link ShortenedUrl} entity
+     * @param url the original URL to be shortened
+     * @return a {@link ShortenedUrl} object containing the original URL and the generated short code
+     * @throws IllegalStateException if a unique short code cannot be generated after the configured retries
      */
-    @Transactional
     public ShortenedUrl createShortUrl(String url) {
-        String shortCode;
-        int attempts = 0;
-        do {
-            if (attempts++ >= MAX_RETRIES) {
-                throw new IllegalStateException("Failed to generate unique short code after " + MAX_RETRIES + " attempts");
+        for (int attempts = 0; attempts < MAX_RETRIES; attempts++) {
+            String code = generateShortCode();
+            if (!shortenedUrlRepository.existsByShortCode(code)) {
+                ShortenedUrl entity = new ShortenedUrl();
+                entity.setUrl(url);
+                entity.setShortCode(code);
+                return shortenedUrlRepository.save(entity);
             }
-            shortCode = generateShortCode();
-        } while (shortenedUrlRepository.existsByShortCode(shortCode));  // retry on collision
-
-        ShortenedUrl entity = new ShortenedUrl();
-        entity.setUrl(url);
-        entity.setShortCode(shortCode);
-
-        return shortenedUrlRepository.save(entity);
+        }
+        throw new IllegalStateException("Failed to generate unique short code after " + MAX_RETRIES + " attempts");
     }
 
     /**
