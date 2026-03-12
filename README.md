@@ -1,6 +1,6 @@
 # URL Shortener API
 
-A RESTful API for creating and managing shortened URLs, built with Spring Boot and PostgreSQL.
+A RESTful API for creating and managing shortened URLs, built with Spring Boot, PostgreSQL, and Redis.
 
 ## Table of Contents
 
@@ -22,6 +22,7 @@ A RESTful API for creating and managing shortened URLs, built with Spring Boot a
 - Retrieve the original URL by short code
 - Update or delete existing short URLs
 - Track access counts per short URL
+- Redis caching on URL lookups (1h TTL) and stats (60s TTL), with automatic cache eviction on update and delete
 
 ---
 
@@ -30,15 +31,16 @@ A RESTful API for creating and managing shortened URLs, built with Spring Boot a
 - **Java 21**
 - **Spring Boot 4.0.3**
 - **PostgreSQL**
+- **Redis** — TTL-based caching
 - **Flyway** — database schema migrations
-- **Docker Compose** — local database setup
+- **Docker Compose** — local service setup
 
 ---
 
 ## Prerequisites
 
 - Java 21+
-- Docker and Docker Compose (for the local database)
+- Docker and Docker Compose (for the local database and cache)
 - Maven (or use the included `./mvnw` wrapper — no installation required)
 
 ---
@@ -52,14 +54,17 @@ git clone https://github.com/ChristianKiernan/url-shortener.git
 cd url-shortener
 ```
 
-### 2. Start the database
+### 2. Start the database and cache
 
 ```bash
 docker compose up -d
 ```
 
-This starts a PostgreSQL instance on port `5433`. Alternatively, point the app at your own
-PostgreSQL database by setting the environment variables described in [Configuration](#configuration).
+This starts:
+- **PostgreSQL** on port `5433`
+- **Redis** on port `6379`
+
+Alternatively, point the app at your own instances by setting the environment variables described in [Configuration](#configuration).
 
 ### 3. Run the application
 
@@ -83,6 +88,8 @@ defaults in `application.properties` are used.
 | `SPRING_DATASOURCE_URL`      | JDBC connection URL | `jdbc:postgresql://localhost:5432/urlshortener` |
 | `SPRING_DATASOURCE_USERNAME` | Database username   | `myuser`                                        |
 | `SPRING_DATASOURCE_PASSWORD` | Database password   | `mypassword`                                    |
+| `SPRING_DATA_REDIS_HOST`     | Redis host          | `localhost`                                     |
+| `SPRING_DATA_REDIS_PORT`     | Redis port          | `6379`                                          |
 
 To run with the production profile:
 
@@ -167,7 +174,7 @@ curl -X POST http://localhost:8080/api/v1/shorten \
 
 ### Get a shortened URL
 
-Retrieves the entry for a short code and increments its access count.
+Retrieves the entry for a short code and increments its access count. Responses are cached for 1 hour — access count is only incremented on a cache miss.
 
 ```
 GET /api/v1/shorten/{code}
@@ -251,7 +258,7 @@ curl -X DELETE http://localhost:8080/api/v1/shorten/aB3xYz
 
 ### Get access statistics
 
-Retrieves the entry for a short code without incrementing its access count.
+Retrieves the entry for a short code without incrementing its access count. Responses are cached for 60 seconds.
 
 ```
 GET /api/v1/shorten/{code}/stats
