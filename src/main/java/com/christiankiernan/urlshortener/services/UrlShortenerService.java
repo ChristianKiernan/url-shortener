@@ -1,8 +1,12 @@
 package com.christiankiernan.urlshortener.services;
 
+import com.christiankiernan.urlshortener.dto.ShortenedUrlResponse;
 import com.christiankiernan.urlshortener.exceptions.NotFoundException;
 import com.christiankiernan.urlshortener.models.ShortenedUrl;
 import com.christiankiernan.urlshortener.repo.ShortenedUrlRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,25 +57,37 @@ public class UrlShortenerService {
     /**
      * Retrieves a shortened URL by its short code and increments its access count.
      *
+     * <p>Results are cached in the {@code urls} cache for one hour. On a cache hit
+     * the method body is skipped entirely, meaning the access count is <em>not</em>
+     * incremented — this is an accepted trade-off of the simple caching approach.
+     *
      * @param shortCode the short code to look up
-     * @return the matching {@link ShortenedUrl} entity
+     * @return the matching {@link ShortenedUrlResponse} DTO
      * @throws NotFoundException if no entry exists for the given short code
      */
+    @Cacheable(value = "urls", key = "#shortCode")
     @Transactional
-    public ShortenedUrl getByShortCode(String shortCode) {
+    public ShortenedUrlResponse getByShortCode(String shortCode) {
         ShortenedUrl entity = findOrThrow(shortCode);
         entity.incrementAccessCount();
-        return entity;
+        return ShortenedUrlResponse.from(entity);
     }
 
     /**
      * Updates the original URL associated with the given short code.
+     *
+     * <p>Evicts the {@code urls} and {@code stats} cache entries for this short code
+     * so the next read fetches fresh data from the database.
      *
      * @param shortCode the short code of the entry to update
      * @param newUrl    the new URL to associate with the short code
      * @return the updated {@link ShortenedUrl} entity
      * @throws NotFoundException if no entry exists for the given short code
      */
+    @Caching(evict = {
+            @CacheEvict(value = "urls", key = "#shortCode"),
+            @CacheEvict(value = "stats", key = "#shortCode")
+    })
     @Transactional
     public ShortenedUrl updateShortUrl(String shortCode, String newUrl) {
         ShortenedUrl entity = findOrThrow(shortCode);
@@ -82,9 +98,15 @@ public class UrlShortenerService {
     /**
      * Deletes the shortened URL with the given short code.
      *
+     * <p>Evicts the {@code urls} and {@code stats} cache entries for this short code.
+     *
      * @param shortCode the short code of the entry to delete
      * @throws NotFoundException if no entry exists for the given short code
      */
+    @Caching(evict = {
+            @CacheEvict(value = "urls", key = "#shortCode"),
+            @CacheEvict(value = "stats", key = "#shortCode")
+    })
     @Transactional
     public void deleteShortUrl(String shortCode) {
         ShortenedUrl entity = findOrThrow(shortCode);
@@ -94,13 +116,16 @@ public class UrlShortenerService {
     /**
      * Retrieves the statistics for a shortened URL by its short code.
      *
+     * <p>Results are cached in the {@code stats} cache for 60 seconds.
+     *
      * @param shortCode the short code to look up
-     * @return the {@link ShortenedUrl} entity including current access count
+     * @return the {@link ShortenedUrlResponse} DTO including current access count
      * @throws NotFoundException if no entry exists for the given short code
      */
+    @Cacheable(value = "stats", key = "#shortCode")
     @Transactional(readOnly = true)
-    public ShortenedUrl getStats(String shortCode) {
-        return findOrThrow(shortCode);
+    public ShortenedUrlResponse getStats(String shortCode) {
+        return ShortenedUrlResponse.from(findOrThrow(shortCode));
     }
 
     private ShortenedUrl findOrThrow(String shortCode) {
