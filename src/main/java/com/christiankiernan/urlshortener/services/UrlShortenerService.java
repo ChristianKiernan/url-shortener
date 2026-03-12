@@ -4,6 +4,8 @@ import com.christiankiernan.urlshortener.dto.ShortenedUrlResponse;
 import com.christiankiernan.urlshortener.exceptions.NotFoundException;
 import com.christiankiernan.urlshortener.models.ShortenedUrl;
 import com.christiankiernan.urlshortener.repo.ShortenedUrlRepository;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
@@ -24,9 +26,13 @@ public class UrlShortenerService {
     private static final int MAX_RETRIES = 5;
     private final SecureRandom random = new SecureRandom();
     private final ShortenedUrlRepository shortenedUrlRepository;
+    private final Counter urlsCreatedCounter;
 
-    public UrlShortenerService(ShortenedUrlRepository shortenedUrlRepository) {
+    public UrlShortenerService(ShortenedUrlRepository shortenedUrlRepository, MeterRegistry meterRegistry) {
         this.shortenedUrlRepository = shortenedUrlRepository;
+        this.urlsCreatedCounter = Counter.builder("url.shortener.urls.created")
+                .description("Total number of shortened URLs created")
+                .register(meterRegistry);
     }
 
     /**
@@ -48,7 +54,9 @@ public class UrlShortenerService {
                 ShortenedUrl entity = new ShortenedUrl();
                 entity.setUrl(url);
                 entity.setShortCode(code);
-                return shortenedUrlRepository.save(entity);
+                ShortenedUrl saved = shortenedUrlRepository.save(entity);
+                urlsCreatedCounter.increment();
+                return saved;
             }
         }
         throw new IllegalStateException("Failed to generate unique short code after " + MAX_RETRIES + " attempts");
