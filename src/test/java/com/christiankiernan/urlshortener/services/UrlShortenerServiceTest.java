@@ -1,5 +1,6 @@
 package com.christiankiernan.urlshortener.services;
 
+import com.christiankiernan.urlshortener.dto.ShortenedUrlResponse;
 import com.christiankiernan.urlshortener.exceptions.NotFoundException;
 import com.christiankiernan.urlshortener.models.ShortenedUrl;
 import com.christiankiernan.urlshortener.repo.ShortenedUrlRepository;
@@ -76,9 +77,9 @@ class UrlShortenerServiceTest {
     void getByShortCode_incrementsAccessCount() {
         when(repository.findByShortCode(TEST_CODE)).thenReturn(buildShortenedUrl());
 
-        ShortenedUrl result = service.getByShortCode(TEST_CODE);
+        ShortenedUrlResponse result = service.getByShortCode(TEST_CODE);
 
-        assertThat(result.getAccessCount()).isEqualTo(1);
+        assertThat(result.accessCount()).isEqualTo(1);
     }
 
     @Test
@@ -129,9 +130,9 @@ class UrlShortenerServiceTest {
     void getStats_returnsEntityWithoutIncrementingAccessCount() {
         when(repository.findByShortCode(TEST_CODE)).thenReturn(buildShortenedUrl());
 
-        ShortenedUrl result = service.getStats(TEST_CODE);
+        ShortenedUrlResponse result = service.getStats(TEST_CODE);
 
-        assertThat(result.getAccessCount()).isEqualTo(0);
+        assertThat(result.accessCount()).isEqualTo(0);
     }
 
     @Test

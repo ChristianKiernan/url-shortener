@@ -1,5 +1,6 @@
 package com.christiankiernan.urlshortener.controllers;
 
+import com.christiankiernan.urlshortener.dto.ShortenedUrlResponse;
 import com.christiankiernan.urlshortener.exceptions.GlobalExceptionHandler;
 import com.christiankiernan.urlshortener.exceptions.NotFoundException;
 import com.christiankiernan.urlshortener.models.ShortenedUrl;
@@ -7,6 +8,7 @@ import com.christiankiernan.urlshortener.services.UrlShortenerService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -29,6 +31,9 @@ class UrlShortenerControllerTest {
 
     @MockitoBean
     private UrlShortenerService service;
+
+    @MockitoBean
+    private CacheManager cacheManager;
 
     // POST /shorten
 
@@ -70,7 +75,7 @@ class UrlShortenerControllerTest {
 
     @Test
     void getByShortCode_returns200WithShortenedUrl() throws Exception {
-        when(service.getByShortCode(TEST_CODE)).thenReturn(buildShortenedUrl());
+        when(service.getByShortCode(TEST_CODE)).thenReturn(buildShortenedUrlResponse());
 
         mockMvc.perform(get("/api/v1/shorten/{code}", TEST_CODE))
                 .andExpect(status().isOk())
@@ -147,7 +152,7 @@ class UrlShortenerControllerTest {
 
     @Test
     void getStats_returns200WithAccessCount() throws Exception {
-        when(service.getStats(TEST_CODE)).thenReturn(buildShortenedUrl());
+        when(service.getStats(TEST_CODE)).thenReturn(buildShortenedUrlResponse());
 
         mockMvc.perform(get("/api/v1/shorten/{code}/stats", TEST_CODE))
                 .andExpect(status().isOk())
@@ -167,6 +172,10 @@ class UrlShortenerControllerTest {
         entity.setUrl(TEST_URL);
         entity.setShortCode(TEST_CODE);
         return entity;
+    }
+
+    private ShortenedUrlResponse buildShortenedUrlResponse() {
+        return ShortenedUrlResponse.from(buildShortenedUrl());
     }
 
 }
