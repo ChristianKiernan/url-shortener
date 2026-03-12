@@ -1,0 +1,161 @@
+{
+  "uid": "url-shortener",
+  "title": "URL Shortener",
+  "schemaVersion": 38,
+  "refresh": "5s",
+  "time": { "from": "now-30m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Cache Hit Rate",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0.5 },
+              { "color": "green", "value": 0.8 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(cache_gets_total{result=\"hit\"}[1m])) / sum(rate(cache_gets_total[1m]))",
+          "legendFormat": "Hit Rate"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Cache Hits vs Misses",
+      "type": "timeseries",
+      "gridPos": { "x": 4, "y": 0, "w": 10, "h": 8 },
+      "fieldConfig": {
+        "defaults": { "unit": "reqps" }
+      },
+      "targets": [
+        {
+          "expr": "sum by (result) (rate(cache_gets_total[30s]))",
+          "legendFormat": "{{ result }}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Cache Evictions",
+      "type": "stat",
+      "gridPos": { "x": 14, "y": 0, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": { "unit": "short" }
+      },
+      "targets": [
+        {
+          "expr": "sum(cache_evictions_total)",
+          "legendFormat": "Evictions"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "URLs Created (total)",
+      "type": "stat",
+      "gridPos": { "x": 14, "y": 4, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": { "unit": "short" }
+      },
+      "targets": [
+        {
+          "expr": "url_shortener_urls_created_total",
+          "legendFormat": "Created"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Redirect Latency — cold vs warm cache",
+      "description": "Run cache-test.js twice (flush Redis between runs) to see cold vs warm latency. Misses hit the DB; hits are served entirely from Redis.",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 8, "w": 18, "h": 8 },
+      "fieldConfig": {
+        "defaults": { "unit": "s" },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "p99" }, "properties": [ { "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } } ] },
+          { "matcher": { "id": "byName", "options": "p95" }, "properties": [ { "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } } ] },
+          { "matcher": { "id": "byName", "options": "p50" }, "properties": [ { "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } } ] }
+        ]
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(http_server_requests_seconds_bucket{uri=\"/{code}\"}[30s])))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{uri=\"/{code}\"}[30s])))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_requests_seconds_bucket{uri=\"/{code}\"}[30s])))",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Requests per Second",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 16, "w": 9, "h": 8 },
+      "fieldConfig": {
+        "defaults": { "unit": "reqps" }
+      },
+      "targets": [
+        {
+          "expr": "sum by (uri, method, status) (rate(http_server_requests_seconds_count{uri=~\"/\\{code\\}|/api/v1/shorten.*\"}[30s]))",
+          "legendFormat": "{{ method }} {{ uri }} {{ status }}"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "DB Connection Pool",
+      "type": "timeseries",
+      "gridPos": { "x": 9, "y": 16, "w": 9, "h": 8 },
+      "fieldConfig": {
+        "defaults": { "unit": "short" }
+      },
+      "targets": [
+        {
+          "expr": "hikaricp_connections_active",
+          "legendFormat": "Active"
+        },
+        {
+          "expr": "hikaricp_connections_idle",
+          "legendFormat": "Idle"
+        },
+        {
+          "expr": "hikaricp_connections_pending",
+          "legendFormat": "Pending"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "JVM Memory",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 24, "w": 9, "h": 8 },
+      "fieldConfig": {
+        "defaults": { "unit": "bytes" }
+      },
+      "targets": [
+        {
+          "expr": "sum by (area) (jvm_memory_used_bytes)",
+          "legendFormat": "{{ area }}"
+        }
+      ]
+    }
+  ]
+}
