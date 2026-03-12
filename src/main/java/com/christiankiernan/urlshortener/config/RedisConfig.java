@@ -33,6 +33,7 @@ public class RedisConfig {
         return RedisCacheManager.builder(connectionFactory)
                 .withCacheConfiguration("urls", urlsConfig)
                 .withCacheConfiguration("stats", statsConfig)
+                .enableStatistics()
                 .build();
     }
 
