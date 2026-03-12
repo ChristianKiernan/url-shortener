@@ -41,7 +41,7 @@ public class RedirectController {
     @ApiResponse(responseCode = "404", description = "Short code not found")
     @GetMapping("/{code}")
     public ResponseEntity<Void> redirect(@PathVariable String code) {
-        String originalUrl = service.getByShortCode(code).getUrl();
+        String originalUrl = service.getByShortCode(code).url();
 
         HttpHeaders headers = new HttpHeaders();
         headers.setLocation(URI.create(originalUrl));

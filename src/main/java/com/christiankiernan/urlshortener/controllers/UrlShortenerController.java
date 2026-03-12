@@ -52,7 +52,7 @@ public class UrlShortenerController {
     @Operation(summary = "Get a shortened URL", description = "Retrieves the entry for a short code and increments its access count")
     @GetMapping("/{code}")
     public ShortenedUrlResponse getByShortCode(@PathVariable String code) {
-        return ShortenedUrlResponse.from(service.getByShortCode(code));
+        return service.getByShortCode(code);
     }
 
     /**
@@ -92,7 +92,7 @@ public class UrlShortenerController {
     @Operation(summary = "Get access statistics", description = "Retrieves the entry for a short code without incrementing its access count")
     @GetMapping("/{code}/stats")
     public ShortenedUrlResponse getStats(@PathVariable String code) {
-        return ShortenedUrlResponse.from(service.getStats(code));
+        return service.getStats(code);
     }
 
 }
