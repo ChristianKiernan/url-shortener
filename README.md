@@ -158,8 +158,7 @@ POST /api/v1/shorten
   "url": "https://example.com/some/very/long/path",
   "shortCode": "aB3xYz",
   "createdAt": "2026-03-06T19:00:00Z",
-  "updatedAt": "2026-03-06T19:00:00Z",
-  "accessCount": 0
+  "updatedAt": "2026-03-06T19:00:00Z"
 }
 ```
 
@@ -175,7 +174,7 @@ curl -X POST http://localhost:8080/api/v1/shorten \
 
 ### Get a shortened URL
 
-Retrieves the entry for a short code and records an access. Responses are cached for 1 hour. Access counts are buffered in Redis and flushed to PostgreSQL every 30 seconds, so `accessCount` in this response may lag slightly behind the true count.
+Retrieves the entry for a short code and records an access. Responses are cached for 1 hour. Access count is not included — use the [stats endpoint](#get-access-statistics) for that.
 
 ```
 GET /api/v1/shorten/{code}
@@ -189,8 +188,7 @@ GET /api/v1/shorten/{code}
   "url": "https://example.com",
   "shortCode": "aB3xYz",
   "createdAt": "2026-03-06T19:00:00Z",
-  "updatedAt": "2026-03-06T19:00:00Z",
-  "accessCount": 1
+  "updatedAt": "2026-03-06T19:00:00Z"
 }
 ```
 
@@ -226,8 +224,7 @@ PUT /api/v1/shorten/{code}
   "url": "https://example.com/updated/path",
   "shortCode": "aB3xYz",
   "createdAt": "2026-03-06T19:00:00Z",
-  "updatedAt": "2026-03-06T19:01:00Z",
-  "accessCount": 1
+  "updatedAt": "2026-03-06T19:01:00Z"
 }
 ```
 
