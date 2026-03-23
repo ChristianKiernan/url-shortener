@@ -21,7 +21,7 @@ A RESTful API for creating and managing shortened URLs, built with Spring Boot, 
 - Redirect to the original URL via short code (`302 Found`)
 - Retrieve the original URL by short code
 - Update or delete existing short URLs
-- Track access counts per short URL
+- Track access counts per short URL with buffered counting — accesses are recorded atomically in Redis and flushed to PostgreSQL every 30 seconds
 - Redis caching on URL lookups (1h TTL) and stats (60s TTL), with automatic cache eviction on update and delete
 
 ---
@@ -31,7 +31,7 @@ A RESTful API for creating and managing shortened URLs, built with Spring Boot, 
 - **Java 21**
 - **Spring Boot 4.0.3**
 - **PostgreSQL**
-- **Redis** — TTL-based caching
+- **Redis** — TTL-based caching and buffered access count storage
 - **Flyway** — database schema migrations
 - **Docker Compose** — local service setup
 
@@ -90,6 +90,7 @@ defaults in `application.properties` are used.
 | `SPRING_DATASOURCE_PASSWORD` | Database password   | `mypassword`                                    |
 | `SPRING_DATA_REDIS_HOST`     | Redis host          | `localhost`                                     |
 | `SPRING_DATA_REDIS_PORT`     | Redis port          | `6379`                                          |
+| `APP_ACCESS_COUNT_FLUSH_INTERVAL_MS` | How often (ms) buffered access counts are flushed to PostgreSQL | `30000` |
 
 To run with the production profile:
 
@@ -174,7 +175,7 @@ curl -X POST http://localhost:8080/api/v1/shorten \
 
 ### Get a shortened URL
 
-Retrieves the entry for a short code and increments its access count. Responses are cached for 1 hour — access count is only incremented on a cache miss.
+Retrieves the entry for a short code and records an access. Responses are cached for 1 hour. Access counts are buffered in Redis and flushed to PostgreSQL every 30 seconds, so `accessCount` in this response may lag slightly behind the true count.
 
 ```
 GET /api/v1/shorten/{code}
@@ -258,7 +259,7 @@ curl -X DELETE http://localhost:8080/api/v1/shorten/aB3xYz
 
 ### Get access statistics
 
-Retrieves the entry for a short code without incrementing its access count. Responses are cached for 60 seconds.
+Retrieves the entry for a short code without recording an access. Responses are cached for 60 seconds. `accessCount` reflects the last flushed value and may lag by up to one flush interval (default 30 seconds).
 
 ```
 GET /api/v1/shorten/{code}/stats
