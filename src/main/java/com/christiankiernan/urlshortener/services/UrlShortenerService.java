@@ -1,6 +1,7 @@
 package com.christiankiernan.urlshortener.services;
 
 import com.christiankiernan.urlshortener.dto.ShortenedUrlResponse;
+import com.christiankiernan.urlshortener.dto.UrlResponse;
 import com.christiankiernan.urlshortener.exceptions.NotFoundException;
 import com.christiankiernan.urlshortener.models.ShortenedUrl;
 import com.christiankiernan.urlshortener.repo.ShortenedUrlRepository;
@@ -79,7 +80,7 @@ public class UrlShortenerService {
      * @return the matching {@link ShortenedUrlResponse} DTO
      * @throws NotFoundException if no entry exists for the given short code
      */
-    public ShortenedUrlResponse recordAccessAndGet(String shortCode) {
+    public UrlResponse recordAccessAndGet(String shortCode) {
         accessCountBuffer.increment(shortCode);
         return urlLookupService.getByShortCode(shortCode);
     }

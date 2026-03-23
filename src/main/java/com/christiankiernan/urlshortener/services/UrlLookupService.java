@@ -1,6 +1,6 @@
 package com.christiankiernan.urlshortener.services;
 
-import com.christiankiernan.urlshortener.dto.ShortenedUrlResponse;
+import com.christiankiernan.urlshortener.dto.UrlResponse;
 import com.christiankiernan.urlshortener.exceptions.NotFoundException;
 import com.christiankiernan.urlshortener.models.ShortenedUrl;
 import com.christiankiernan.urlshortener.repo.ShortenedUrlRepository;
@@ -32,11 +32,11 @@ public class UrlLookupService {
      */
     @Cacheable(value = "urls", key = "#shortCode")
     @Transactional(readOnly = true)
-    public ShortenedUrlResponse getByShortCode(String shortCode) {
+    public UrlResponse getByShortCode(String shortCode) {
         ShortenedUrl entity = repository.findByShortCode(shortCode);
         if (entity == null) {
             throw new NotFoundException(shortCode);
         }
-        return ShortenedUrlResponse.from(entity);
+        return UrlResponse.from(entity);
     }
 }

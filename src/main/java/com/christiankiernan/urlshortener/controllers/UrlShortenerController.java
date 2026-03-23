@@ -3,6 +3,7 @@ package com.christiankiernan.urlshortener.controllers;
 import com.christiankiernan.urlshortener.dto.CreateUrlRequest;
 import com.christiankiernan.urlshortener.dto.ShortenedUrlResponse;
 import com.christiankiernan.urlshortener.dto.UpdateUrlRequest;
+import com.christiankiernan.urlshortener.dto.UrlResponse;
 import com.christiankiernan.urlshortener.services.UrlShortenerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -38,8 +39,8 @@ public class UrlShortenerController {
     @Operation(summary = "Create a shortened URL", description = "Generates a unique 6-character short code for the given URL")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ShortenedUrlResponse create(@Valid @RequestBody CreateUrlRequest request) {
-        return ShortenedUrlResponse.from(service.createShortUrl(request.url()));
+    public UrlResponse create(@Valid @RequestBody CreateUrlRequest request) {
+        return UrlResponse.from(service.createShortUrl(request.url()));
     }
 
     /**
@@ -51,7 +52,7 @@ public class UrlShortenerController {
      */
     @Operation(summary = "Get a shortened URL", description = "Retrieves the entry for a short code and increments its access count")
     @GetMapping("/{code}")
-    public ShortenedUrlResponse getByShortCode(@PathVariable String code) {
+    public UrlResponse getByShortCode(@PathVariable String code) {
         return service.recordAccessAndGet(code);
     }
 
@@ -65,8 +66,8 @@ public class UrlShortenerController {
      */
     @Operation(summary = "Update a shortened URL", description = "Replaces the original URL associated with a short code")
     @PutMapping("/{code}")
-    public ShortenedUrlResponse update(@PathVariable String code, @Valid @RequestBody UpdateUrlRequest request) {
-        return ShortenedUrlResponse.from(service.updateShortUrl(code, request.url()));
+    public UrlResponse update(@PathVariable String code, @Valid @RequestBody UpdateUrlRequest request) {
+        return UrlResponse.from(service.updateShortUrl(code, request.url()));
     }
 
     /**
