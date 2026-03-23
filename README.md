@@ -80,27 +80,27 @@ The API is available at `http://localhost:8080`.
 
 ## Configuration
 
-The application reads the following environment variables when running with the `prod` profile. In development, the
-defaults in `application.properties` are used.
+The application reads the following environment variables to override the defaults in `application.properties`. In local development (after `docker compose up -d`), no overrides are needed.
 
-| Variable                     | Description         | Example                                         |
-|------------------------------|---------------------|-------------------------------------------------|
-| `SPRING_DATASOURCE_URL`      | JDBC connection URL | `jdbc:postgresql://localhost:5432/urlshortener` |
-| `SPRING_DATASOURCE_USERNAME` | Database username   | `myuser`                                        |
-| `SPRING_DATASOURCE_PASSWORD` | Database password   | `mypassword`                                    |
-| `SPRING_DATA_REDIS_HOST`     | Redis host          | `localhost`                                     |
-| `SPRING_DATA_REDIS_PORT`     | Redis port          | `6379`                                          |
+| Variable                     | Description         | Default (local dev)                              |
+|------------------------------|---------------------|--------------------------------------------------|
+| `SPRING_DATASOURCE_URL`      | JDBC connection URL | `jdbc:postgresql://localhost:5433/urlshortener`  |
+| `SPRING_DATASOURCE_USERNAME` | Database username   | `urlshortener`                                   |
+| `SPRING_DATASOURCE_PASSWORD` | Database password   | `urlshortener`                                   |
+| `SPRING_DATA_REDIS_HOST`     | Redis host          | `localhost`                                      |
+| `SPRING_DATA_REDIS_PORT`     | Redis port          | `6379`                                           |
 | `APP_ACCESS_COUNT_FLUSH_INTERVAL_MS` | How often (ms) buffered access counts are flushed to PostgreSQL | `30000` |
 
-To run with the production profile:
+To point the app at an external database (e.g. in a staging or production environment), set the variables for your actual host and credentials:
 
 ```bash
-SPRING_PROFILES_ACTIVE=prod \
-SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/urlshortener \
-SPRING_DATASOURCE_USERNAME=myuser \
-SPRING_DATASOURCE_PASSWORD=mypassword \
+SPRING_DATASOURCE_URL=jdbc:postgresql://<your-db-host>:5432/urlshortener \
+SPRING_DATASOURCE_USERNAME=<your-db-user> \
+SPRING_DATASOURCE_PASSWORD=<your-db-password> \
 ./mvnw spring-boot:run
 ```
+
+Replace `<your-db-host>`, `<your-db-user>`, and `<your-db-password>` with real values. Running this against a fresh database requires that the database and user already exist — Flyway will create the schema on first startup.
 
 ---
 
