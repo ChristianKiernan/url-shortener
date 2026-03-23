@@ -35,7 +35,7 @@ class RedirectControllerTest {
     @Test
     void redirect_returns302WithLocationHeader() throws Exception {
         ShortenedUrlResponse response = ShortenedUrlResponse.from(buildShortenedUrl());
-        when(service.getByShortCode(TEST_CODE)).thenReturn(response);
+        when(service.recordAccessAndGet(TEST_CODE)).thenReturn(response);
 
         mockMvc.perform(get("/{code}", TEST_CODE))
                 .andExpect(status().isFound())
@@ -51,7 +51,7 @@ class RedirectControllerTest {
 
     @Test
     void redirect_returns404WhenCodeNotFound() throws Exception {
-        when(service.getByShortCode(TEST_CODE)).thenThrow(new NotFoundException(TEST_CODE));
+        when(service.recordAccessAndGet(TEST_CODE)).thenThrow(new NotFoundException(TEST_CODE));
 
         mockMvc.perform(get("/{code}", TEST_CODE))
                 .andExpect(status().isNotFound());

@@ -27,21 +27,24 @@ public class UrlShortenerService {
     private final SecureRandom random = new SecureRandom();
     private final ShortenedUrlRepository shortenedUrlRepository;
     private final Counter urlsCreatedCounter;
+    private final AccessCountBuffer accessCountBuffer;
+    private final UrlLookupService urlLookupService;
 
-    public UrlShortenerService(ShortenedUrlRepository shortenedUrlRepository, MeterRegistry meterRegistry) {
+    public UrlShortenerService(ShortenedUrlRepository shortenedUrlRepository,
+                               MeterRegistry meterRegistry,
+                               AccessCountBuffer accessCountBuffer,
+                               UrlLookupService urlLookupService) {
         this.shortenedUrlRepository = shortenedUrlRepository;
         this.urlsCreatedCounter = Counter.builder("url.shortener.urls.created")
                 .description("Total number of shortened URLs created")
                 .register(meterRegistry);
+        this.accessCountBuffer = accessCountBuffer;
+        this.urlLookupService = urlLookupService;
     }
 
     /**
      * Creates a shortened URL by generating a unique short code for the given URL
      * and saving it to the repository.
-     * <p>
-     * Retries a maximum number of times in case of short code collisions. If a unique
-     * short code cannot be generated within the configured retries, an {@link IllegalStateException}
-     * is thrown.
      *
      * @param url the original URL to be shortened
      * @return a {@link ShortenedUrl} object containing the original URL and the generated short code
@@ -63,29 +66,26 @@ public class UrlShortenerService {
     }
 
     /**
-     * Retrieves a shortened URL by its short code and increments its access count.
+     * Records an access for the given short code and returns the URL response.
+     * The Redis buffer is incremented on every call — including cache hits — because
+     * this method itself is not cached. The underlying lookup delegates to
+     * {@link UrlLookupService#getByShortCode}, which is cached and called through
+     * its own Spring proxy.
      *
-     * <p>Results are cached in the {@code urls} cache for one hour. On a cache hit
-     * the method body is skipped entirely, meaning the access count is <em>not</em>
-     * incremented — this is an accepted trade-off of the simple caching approach.
+     * <p>Access counts are flushed to PostgreSQL asynchronously by {@link AccessCountFlusher}.
+     * Stats may lag by up to one flush interval.
      *
      * @param shortCode the short code to look up
      * @return the matching {@link ShortenedUrlResponse} DTO
      * @throws NotFoundException if no entry exists for the given short code
      */
-    @Cacheable(value = "urls", key = "#shortCode")
-    @Transactional
-    public ShortenedUrlResponse getByShortCode(String shortCode) {
-        ShortenedUrl entity = findOrThrow(shortCode);
-        entity.incrementAccessCount();
-        return ShortenedUrlResponse.from(entity);
+    public ShortenedUrlResponse recordAccessAndGet(String shortCode) {
+        accessCountBuffer.increment(shortCode);
+        return urlLookupService.getByShortCode(shortCode);
     }
 
     /**
      * Updates the original URL associated with the given short code.
-     *
-     * <p>Evicts the {@code urls} and {@code stats} cache entries for this short code
-     * so the next read fetches fresh data from the database.
      *
      * @param shortCode the short code of the entry to update
      * @param newUrl    the new URL to associate with the short code
@@ -105,8 +105,7 @@ public class UrlShortenerService {
 
     /**
      * Deletes the shortened URL with the given short code.
-     *
-     * <p>Evicts the {@code urls} and {@code stats} cache entries for this short code.
+     * Also removes any buffered Redis counter to prevent phantom flushes.
      *
      * @param shortCode the short code of the entry to delete
      * @throws NotFoundException if no entry exists for the given short code
@@ -119,12 +118,14 @@ public class UrlShortenerService {
     public void deleteShortUrl(String shortCode) {
         ShortenedUrl entity = findOrThrow(shortCode);
         shortenedUrlRepository.delete(entity);
+        accessCountBuffer.delete(shortCode);
     }
 
     /**
      * Retrieves the statistics for a shortened URL by its short code.
      *
      * <p>Results are cached in the {@code stats} cache for 60 seconds.
+     * Due to buffered counting, {@code accessCount} may lag by up to one flush interval.
      *
      * @param shortCode the short code to look up
      * @return the {@link ShortenedUrlResponse} DTO including current access count

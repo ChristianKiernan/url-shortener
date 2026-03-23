@@ -12,6 +12,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -26,11 +27,17 @@ class UrlShortenerServiceTest {
     @Mock
     private ShortenedUrlRepository repository;
 
+    @Mock
+    private AccessCountBuffer accessCountBuffer;
+
+    @Mock
+    private UrlLookupService urlLookupService;
+
     private UrlShortenerService service;
 
     @BeforeEach
     void setUp() {
-        service = new UrlShortenerService(repository, new SimpleMeterRegistry());
+        service = new UrlShortenerService(repository, new SimpleMeterRegistry(), accessCountBuffer, urlLookupService);
     }
 
     @Captor
@@ -77,21 +84,22 @@ class UrlShortenerServiceTest {
                 .isInstanceOf(IllegalStateException.class);
     }
 
-
     @Test
-    void getByShortCode_incrementsAccessCount() {
-        when(repository.findByShortCode(TEST_CODE)).thenReturn(buildShortenedUrl());
+    void recordAccessAndGet_incrementsBufferAndDelegatesToLookup() {
+        ShortenedUrlResponse expected = ShortenedUrlResponse.from(buildShortenedUrl());
+        when(urlLookupService.getByShortCode(TEST_CODE)).thenReturn(expected);
 
-        ShortenedUrlResponse result = service.getByShortCode(TEST_CODE);
+        ShortenedUrlResponse result = service.recordAccessAndGet(TEST_CODE);
 
-        assertThat(result.accessCount()).isEqualTo(1);
+        verify(accessCountBuffer).increment(TEST_CODE);
+        assertThat(result).isEqualTo(expected);
     }
 
     @Test
-    void getByShortCode_throwsNotFoundForUnknownCode() {
-        when(repository.findByShortCode(TEST_CODE)).thenReturn(null);
+    void recordAccessAndGet_propagatesNotFoundFromLookup() {
+        when(urlLookupService.getByShortCode(TEST_CODE)).thenThrow(new NotFoundException(TEST_CODE));
 
-        assertThatThrownBy(() -> service.getByShortCode(TEST_CODE))
+        assertThatThrownBy(() -> service.recordAccessAndGet(TEST_CODE))
                 .isInstanceOf(NotFoundException.class);
     }
 
@@ -114,13 +122,14 @@ class UrlShortenerServiceTest {
     }
 
     @Test
-    void deleteShortUrl_deletesEntityFromRepository() {
+    void deleteShortUrl_deletesEntityAndClearsBuffer() {
         ShortenedUrl entity = buildShortenedUrl();
         when(repository.findByShortCode(TEST_CODE)).thenReturn(entity);
 
         service.deleteShortUrl(TEST_CODE);
 
         verify(repository).delete(entity);
+        verify(accessCountBuffer).delete(TEST_CODE);
     }
 
     @Test
@@ -138,6 +147,7 @@ class UrlShortenerServiceTest {
         ShortenedUrlResponse result = service.getStats(TEST_CODE);
 
         assertThat(result.accessCount()).isEqualTo(0);
+        verifyNoInteractions(accessCountBuffer);
     }
 
     @Test

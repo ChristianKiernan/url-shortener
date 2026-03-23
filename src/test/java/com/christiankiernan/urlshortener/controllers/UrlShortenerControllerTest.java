@@ -75,7 +75,7 @@ class UrlShortenerControllerTest {
 
     @Test
     void getByShortCode_returns200WithShortenedUrl() throws Exception {
-        when(service.getByShortCode(TEST_CODE)).thenReturn(buildShortenedUrlResponse());
+        when(service.recordAccessAndGet(TEST_CODE)).thenReturn(buildShortenedUrlResponse());
 
         mockMvc.perform(get("/api/v1/shorten/{code}", TEST_CODE))
                 .andExpect(status().isOk())
@@ -85,7 +85,7 @@ class UrlShortenerControllerTest {
 
     @Test
     void getByShortCode_returns404WhenCodeNotFound() throws Exception {
-        when(service.getByShortCode(TEST_CODE)).thenThrow(new NotFoundException(TEST_CODE));
+        when(service.recordAccessAndGet(TEST_CODE)).thenThrow(new NotFoundException(TEST_CODE));
 
         mockMvc.perform(get("/api/v1/shorten/{code}", TEST_CODE))
                 .andExpect(status().isNotFound());
