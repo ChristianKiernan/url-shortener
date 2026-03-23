@@ -1,6 +1,7 @@
 package com.christiankiernan.urlshortener.controllers;
 
 import com.christiankiernan.urlshortener.dto.ShortenedUrlResponse;
+import com.christiankiernan.urlshortener.dto.UrlResponse;
 import com.christiankiernan.urlshortener.exceptions.GlobalExceptionHandler;
 import com.christiankiernan.urlshortener.exceptions.NotFoundException;
 import com.christiankiernan.urlshortener.models.ShortenedUrl;
@@ -48,7 +49,8 @@ class UrlShortenerControllerTest {
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.url").value(TEST_URL))
-                .andExpect(jsonPath("$.shortCode").value(TEST_CODE));
+                .andExpect(jsonPath("$.shortCode").value(TEST_CODE))
+                .andExpect(jsonPath("$.accessCount").doesNotExist());
     }
 
     @Test
@@ -74,13 +76,14 @@ class UrlShortenerControllerTest {
     // GET /shorten/{code}
 
     @Test
-    void getByShortCode_returns200WithShortenedUrl() throws Exception {
-        when(service.recordAccessAndGet(TEST_CODE)).thenReturn(buildShortenedUrlResponse());
+    void getByShortCode_returns200WithoutAccessCount() throws Exception {
+        when(service.recordAccessAndGet(TEST_CODE)).thenReturn(buildUrlResponse());
 
         mockMvc.perform(get("/api/v1/shorten/{code}", TEST_CODE))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.url").value(TEST_URL))
-                .andExpect(jsonPath("$.shortCode").value(TEST_CODE));
+                .andExpect(jsonPath("$.shortCode").value(TEST_CODE))
+                .andExpect(jsonPath("$.accessCount").doesNotExist());
     }
 
     @Test
@@ -105,7 +108,8 @@ class UrlShortenerControllerTest {
                                 {"url": "https://updated.com"}
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.url").value("https://updated.com"));
+                .andExpect(jsonPath("$.url").value("https://updated.com"))
+                .andExpect(jsonPath("$.accessCount").doesNotExist());
     }
 
     @Test
@@ -174,8 +178,11 @@ class UrlShortenerControllerTest {
         return entity;
     }
 
+    private UrlResponse buildUrlResponse() {
+        return UrlResponse.from(buildShortenedUrl());
+    }
+
     private ShortenedUrlResponse buildShortenedUrlResponse() {
         return ShortenedUrlResponse.from(buildShortenedUrl());
     }
-
 }

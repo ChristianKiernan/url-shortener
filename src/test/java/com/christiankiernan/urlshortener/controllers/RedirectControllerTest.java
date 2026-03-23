@@ -1,6 +1,6 @@
 package com.christiankiernan.urlshortener.controllers;
 
-import com.christiankiernan.urlshortener.dto.ShortenedUrlResponse;
+import com.christiankiernan.urlshortener.dto.UrlResponse;
 import com.christiankiernan.urlshortener.exceptions.GlobalExceptionHandler;
 import com.christiankiernan.urlshortener.exceptions.NotFoundException;
 import com.christiankiernan.urlshortener.models.ShortenedUrl;
@@ -34,7 +34,7 @@ class RedirectControllerTest {
 
     @Test
     void redirect_returns302WithLocationHeader() throws Exception {
-        ShortenedUrlResponse response = ShortenedUrlResponse.from(buildShortenedUrl());
+        UrlResponse response = UrlResponse.from(buildShortenedUrl());
         when(service.recordAccessAndGet(TEST_CODE)).thenReturn(response);
 
         mockMvc.perform(get("/{code}", TEST_CODE))
